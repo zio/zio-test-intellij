@@ -1,0 +1,149 @@
+package zio.intellij.testsupport
+
+import zio.duration.Duration
+import zio.test._
+import zio.{ Ref, UIO }
+
+object ZTestRunner {
+  case class Args private (testClass: String, testMethods: List[String]) {
+    def toTestArgs: TestArgs = TestArgs(testMethods, Nil, None)
+  }
+  object Args {
+    def parse(args: Array[String]): Args = {
+      // Command line arguments from IntelliJ. Can be either regular-style args:
+      // [-s testClassName ...] [-t testMethodName ...]
+      // or new-style args file (passed via @filename). TODO
+
+      // TODO: Add a proper command-line parser
+      val parsedArgs = args
+        .sliding(2, 2)
+        .collect {
+          case Array("-s", term) => ("testClassTerm", term)
+          case Array("-t", term) => ("testMethodTerm", term)
+        }
+        .toList
+        .groupBy(_._1)
+        .map {
+          case (k, v) =>
+            (k, v.map(_._2))
+        }
+
+      val testClass = parsedArgs
+        .getOrElse("testClassTerm", Nil)
+        .headOption
+        .getOrElse {
+            println("Unable to find the spec class name in the command-line args.\n" +
+              "Make sure at least one fully-qualified class name was passed with the -s [fqn] parameter.\n" +
+              "If you believe this is a bug, please report it to the ZIO IntelliJ plugin maintainers.")
+          sys.exit(-1)
+        }
+      val testMethods = parsedArgs.getOrElse("testMethodTerm", Nil)
+      Args(testClass, testMethods)
+    }
+  }
+
+  def createSpec(args: Args): AbstractRunnableSpec = {
+    import org.portablescala.reflect._
+    val fqn = args.testClass.stripSuffix("$") + "$"
+    Reflect
+      .lookupLoadableModuleClass(fqn)
+      .getOrElse(throw new ClassNotFoundException("failed to load object: " + fqn))
+      .loadModule()
+      .asInstanceOf[AbstractRunnableSpec]
+
+  }
+
+  def main(args: Array[String]): Unit = {
+    val parsedArgs   = Args.parse(args)
+    val testArgs     = parsedArgs.toTestArgs
+    val specInstance = createSpec(parsedArgs)
+    val spec         = FilteredSpec(specInstance.spec, testArgs)
+    val _ = specInstance.runner
+      .withReporter(TestRunnerReporter[specInstance.Failure]())
+      .unsafeRun(spec)
+  }
+}
+
+object TestRunnerReporter {
+  def apply[E](): TestReporter[E] =
+    (_: Duration, executedSpec: ExecutedSpec[E]) =>
+      for {
+        rendered <- render(executedSpec)
+        _        <- TestLogger.logLine(rendered.mkString("\n"))
+      } yield ()
+
+  def render[E](executedSpec: ExecutedSpec[E]): UIO[Seq[String]] =
+    Ref.make(0).flatMap { idCounter =>
+      def newId: UIO[Int] =
+        idCounter.updateAndGet(_ + 1)
+
+      def loop(executedSpec: ExecutedSpec[E], pid: Int): UIO[Seq[String]] =
+        executedSpec.caseValue match {
+          case Spec.SuiteCase(label, executedSpecs, _) =>
+            for {
+              id       <- newId
+              specs    <- executedSpecs
+              started  = suiteStarted(label, id, pid)
+              finished = suiteFinished(label, id)
+              rest     <- UIO.foreach(specs)(loop(_, id)).map(_.flatten)
+            } yield started +: rest :+ finished
+          case Spec.TestCase(label, result, _) =>
+            for {
+              id      <- newId
+              results <- DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
+              started = testStarted(label, id, pid)
+              finished <- result.map {
+                           case Right(TestSuccess.Succeeded(_)) =>
+                             Seq(testFinished(label, id))
+                           case Right(TestSuccess.Ignored) =>
+                             Seq(testIgnored(label, id))
+                           case Left(_) =>
+                             Seq(testFailed(label, id, results.toList))
+                         }
+            } yield started +: finished
+        }
+      loop(executedSpec, 0)
+    }
+
+  private def suiteStarted(label: String, id: Int, parentId: Int) =
+    tc(
+      s"testSuiteStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
+        s"captureStandardOutput='true'"
+    )
+
+  private def suiteFinished(label: String, id: Int) =
+    tc(s"testSuiteFinished name='${escapeString(label)}' nodeId='$id'")
+
+  private def testStarted(label: String, id: Int, parentId: Int) =
+    tc(
+      s"testStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
+        s"captureStandardOutput='true'"
+    )
+
+  private def testFinished(label: String, id: Int) =
+    tc(s"testFinished name='${escapeString(label)}' nodeId='$id'")
+
+  private def testIgnored(label: String, id: Int) =
+    tc(s"testIgnored name='${escapeString(label)}' nodeId='$id'")
+
+  private def testFailed(label: String, id: Int, res: List[RenderedResult[String]]) = res match {
+    case r :: Nil =>
+      tc(
+        s"testFailed name='${escapeString(label)}' nodeId='$id' message='Assertion failed:' " +
+          s"details='${escapeString(r.rendered.drop(1).mkString("\n"))}'"
+      )
+    case _ => tc(s"testFailed name='${escapeString(label)}' message='Assertion failed' nodeId='$id'")
+  }
+
+  def tc(message: String): String =
+    s"##teamcity[$message]"
+
+  def escapeString(str: String): String =
+    str
+      .replaceAll("[|]", "||")
+      .replaceAll("[']", "|'")
+      .replaceAll("[\n]", "|n")
+      .replaceAll("[\r]", "|r")
+      .replaceAll("]", "|]")
+      .replaceAll("\\[", "|[")
+}
