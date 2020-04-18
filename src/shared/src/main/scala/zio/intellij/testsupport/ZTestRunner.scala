@@ -9,13 +9,28 @@ object ZTestRunner {
     def toTestArgs: TestArgs = TestArgs(testMethods, Nil, None)
   }
   object Args {
+    /**
+     * Need to read args from file if command line shortener is enabled.
+     *
+     * https://blog.jetbrains.com/idea/2017/10/intellij-idea-2017-3-eap-configurable-command-line-shortener-and-more/
+     */
+    def readArgsFromFileIfCommandLineShortenerIsEnabled(args: Array[String]): Option[Array[String]] = {
+      if (args.length == 1 && args.head.startsWith("@")) {
+        val f = scala.io.Source.fromFile(args.head.drop(1))
+        try Some(f.getLines().toArray) finally f.close()
+      } else {
+        None
+      }
+    }
+
     def parse(args: Array[String]): Args = {
       // Command line arguments from IntelliJ. Can be either regular-style args:
       // [-s testClassName ...] [-t testMethodName ...]
       // or new-style args file (passed via @filename). TODO
 
       // TODO: Add a proper command-line parser
-      val parsedArgs = args
+      val parsedArgs = readArgsFromFileIfCommandLineShortenerIsEnabled(args)
+        .getOrElse(args)
         .sliding(2, 2)
         .collect {
           case Array("-s", term) => ("testClassTerm", term)
