@@ -7,7 +7,7 @@
 # Summary
 This is an optional dependency module, providing enhanced test runner support in the [ZIO IntelliJ plugin](https://github.com/zio/zio-intellij).
 
-![](https://user-images.githubusercontent.com/601206/74926840-37f77c80-53df-11ea-9991-ebd4b870d857.png)
+<img src="https://user-images.githubusercontent.com/601206/74926840-37f77c80-53df-11ea-9991-ebd4b870d857.png" width="600" />
 
 # Usage
 
