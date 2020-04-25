@@ -32,8 +32,6 @@ addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck"
 
 val zioVersion = "1.0.0-RC18-2"
 
-ThisBuild / version := zioVersion
-
 lazy val root = project
   .in(file("."))
   .settings(
