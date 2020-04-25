@@ -2,34 +2,37 @@ package zio.intellij.testsupport
 
 import zio.duration.Duration
 import zio.test._
-import zio.{ Ref, UIO }
+import zio.test.environment.TestEnvironment
+import zio.{Ref, UIO}
 
 object ZTestRunner {
+
   case class Args private (testClass: String, testMethods: List[String]) {
     def toTestArgs: TestArgs = TestArgs(testMethods, Nil, None)
   }
+
   object Args {
+
     /**
-     * Need to read args from file if command line shortener is enabled.
+     * Read args from file if the command line shortener (Java 9+) is enabled.
      *
      * https://blog.jetbrains.com/idea/2017/10/intellij-idea-2017-3-eap-configurable-command-line-shortener-and-more/
      */
-    def readArgsFromFileIfCommandLineShortenerIsEnabled(args: Array[String]): Option[Array[String]] = {
+    def readFromFile(args: Array[String]): Option[Array[String]] =
       if (args.length == 1 && args.head.startsWith("@")) {
         val f = scala.io.Source.fromFile(args.head.drop(1))
-        try Some(f.getLines().toArray) finally f.close()
-      } else {
-        None
-      }
-    }
+        try Some(f.getLines().toArray)
+        finally f.close()
+      } else None
 
+    /**
+     * Command line arguments from IntelliJ. Can be either regular-style args:
+     * [-s testClassName ...] [-t testMethodName ...]
+     * or new-style args file (passed via @filename).
+     */
     def parse(args: Array[String]): Args = {
-      // Command line arguments from IntelliJ. Can be either regular-style args:
-      // [-s testClassName ...] [-t testMethodName ...]
-      // or new-style args file (passed via @filename). TODO
-
       // TODO: Add a proper command-line parser
-      val parsedArgs = readArgsFromFileIfCommandLineShortenerIsEnabled(args)
+      val parsedArgs = readFromFile(args)
         .getOrElse(args)
         .sliding(2, 2)
         .collect {
@@ -47,9 +50,11 @@ object ZTestRunner {
         .getOrElse("testClassTerm", Nil)
         .headOption
         .getOrElse {
-            println("Unable to find the spec class name in the command-line args.\n" +
+          println(
+            "Unable to find the spec class name in the command-line args.\n" +
               "Make sure at least one fully-qualified class name was passed with the -s [fqn] parameter.\n" +
-              "If you believe this is a bug, please report it to the ZIO IntelliJ plugin maintainers.")
+              "If you believe this is a bug, please report it to the ZIO IntelliJ plugin maintainers."
+          )
           sys.exit(-1)
         }
       val testMethods = parsedArgs.getOrElse("testMethodTerm", Nil)
@@ -57,14 +62,14 @@ object ZTestRunner {
     }
   }
 
-  def createSpec(args: Args): AbstractRunnableSpec = {
+  def createSpec(args: Args): RunnableSpec[TestEnvironment, Any] = {
     import org.portablescala.reflect._
     val fqn = args.testClass.stripSuffix("$") + "$"
     Reflect
       .lookupLoadableModuleClass(fqn)
       .getOrElse(throw new ClassNotFoundException("failed to load object: " + fqn))
       .loadModule()
-      .asInstanceOf[AbstractRunnableSpec]
+      .asInstanceOf[RunnableSpec[TestEnvironment, Any]]
 
   }
 
@@ -73,9 +78,13 @@ object ZTestRunner {
     val testArgs     = parsedArgs.toTestArgs
     val specInstance = createSpec(parsedArgs)
     val spec         = FilteredSpec(specInstance.spec, testArgs)
-    val _ = specInstance.runner
+
+    val withTiming = spec @@ TestRunnerAspects.timedReport
+
+    val runner = specInstance.runner
       .withReporter(TestRunnerReporter[specInstance.Failure]())
-      .unsafeRun(spec)
+
+    val _ = runner.unsafeRunSync(withTiming)
   }
 }
 
@@ -102,14 +111,15 @@ object TestRunnerReporter {
               finished = suiteFinished(label, id)
               rest     <- UIO.foreach(specs)(loop(_, id)).map(_.flatten)
             } yield started +: rest :+ finished
-          case Spec.TestCase(label, result, _) =>
+          case Spec.TestCase(label, result, annotations) =>
             for {
               id      <- newId
               results <- DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
               started = testStarted(label, id, pid)
               finished <- result.map {
                            case Right(TestSuccess.Succeeded(_)) =>
-                             Seq(testFinished(label, id))
+                             val timing = TestRunnerAspects.renderTiming.run(Nil, annotations)
+                             Seq(testFinished(label, id, timing.headOption))
                            case Right(TestSuccess.Ignored) =>
                              Seq(testIgnored(label, id))
                            case Left(_) =>
@@ -123,7 +133,7 @@ object TestRunnerReporter {
   private def suiteStarted(label: String, id: Int, parentId: Int) =
     tc(
       s"testSuiteStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
-        s"captureStandardOutput='true'"
+        s"captureStandardOutput='false'"
     )
 
   private def suiteFinished(label: String, id: Int) =
@@ -132,11 +142,13 @@ object TestRunnerReporter {
   private def testStarted(label: String, id: Int, parentId: Int) =
     tc(
       s"testStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
-        s"captureStandardOutput='true'"
+        s"captureStandardOutput='false'"
     )
 
-  private def testFinished(label: String, id: Int) =
-    tc(s"testFinished name='${escapeString(label)}' nodeId='$id'")
+  private def testFinished(label: String, id: Int, timing: Option[String]) = {
+    val m = s"testFinished name='${escapeString(label)}' nodeId='$id'"
+    tc(timing.fold(m)(t => m + s" duration='$t'"))
+  }
 
   private def testIgnored(label: String, id: Int) =
     tc(s"testIgnored name='${escapeString(label)}' nodeId='$id'")

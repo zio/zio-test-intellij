@@ -27,11 +27,11 @@ object ZTestRunnerSpec extends DefaultRunnableSpec {
     testM("read arguments from file if command line argument is a file path") {
       (for {
         argFile <- ZIO.access[Has[File]](_.get)
-        args <- UIO(ZTestRunner.Args.readArgsFromFileIfCommandLineShortenerIsEnabled(Array(s"@${argFile.getAbsolutePath}")).get)
+        args <- UIO(ZTestRunner.Args.readFromFile(Array(s"@${argFile.getAbsolutePath}")).get)
       } yield assert(args.toList)(hasSize(equalTo(4)))).provideLayer(tempArgFile)
     },
     test("ignore non-file command line argument"){
-      assert(ZTestRunner.Args.readArgsFromFileIfCommandLineShortenerIsEnabled(Array("abc", "efg")))(isNone)
+      assert(ZTestRunner.Args.readFromFile(Array("abc", "efg")))(isNone)
     }
   )
 }
