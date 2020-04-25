@@ -88,17 +88,6 @@ lint: &lint
         command: ./sbt ++${SCALA_VERSION}! check
     - <<: *save_cache
 
-mdoc: &mdoc
-  steps:
-    - checkout
-    - <<: *load_cache
-    - run:
-        name: Generate documentation
-        command: |
-          ./sbt doc
-          ./sbt ++${SCALA_VERSION}! docs/mdoc
-    - <<: *save_cache
-
 test: &test
   steps:
     - checkout
@@ -152,13 +141,6 @@ jobs:
     <<: *machine_ubuntu
     environment:
       - <<: *scala_dotty
-      - <<: *jdk_8
-
-  mdoc:
-    <<: *mdoc
-    <<: *machine_ubuntu
-    environment:
-      - <<: *scala_212
       - <<: *jdk_8
 
   test_212_jdk8_jvm:
@@ -217,11 +199,6 @@ workflows:
       - lint:
           filters:
             <<: *filter_tags
-      - mdoc:
-          requires:
-            - lint
-          filters:
-            <<: *filter_tags
       - test_212_jdk8_jvm:
           requires:
             - lint
@@ -249,7 +226,6 @@ workflows:
             - test_212_jdk11_jvm
             - test_213_jdk8_jvm
             - test_213_jdk11_jvm
-            - mdoc
           filters:
             <<: *filter_tags
             branches:
