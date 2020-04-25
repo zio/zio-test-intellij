@@ -41,6 +41,8 @@ Separating the library allows decoupling the plugin from any specific ZIO versio
 
 The library is a small implementation of the built-in ZIO Test runner with a custom test result renderer that emits IntelliJ-specific output. IntelliJ launches ZIO tests as a command-line application, so the library has to be present on the classpath. By adding it to the `build.sbt` it ensures that the correct version will be loaded.
 
+In the future, the ZIO IntelliJ plugin will be able to download and use the correct version automatically, without having to add it to `build.sbt`.
+
 ## I found a bug/have a feature request!
 
 Great! Please report it to the [ZIO IntelliJ plugin](https://github.com/zio/zio-intellij/) repo.
