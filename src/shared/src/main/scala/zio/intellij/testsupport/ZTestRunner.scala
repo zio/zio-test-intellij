@@ -3,7 +3,7 @@ package zio.intellij.testsupport
 import zio.duration.Duration
 import zio.test._
 import zio.test.environment.TestEnvironment
-import zio.{Ref, UIO}
+import zio.{ Ref, UIO }
 
 object ZTestRunner {
 
