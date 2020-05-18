@@ -106,7 +106,7 @@ object TestRunnerReporter {
           case Spec.SuiteCase(label, executedSpecs, _) =>
             for {
               id       <- newId
-              specs    <- executedSpecs
+              specs    <- executedSpecs.useNow
               started  = suiteStarted(label, id, pid)
               finished = suiteFinished(label, id)
               rest     <- UIO.foreach(specs)(loop(_, id)).map(_.flatten)
