@@ -16,7 +16,7 @@ Once enabled, the test results will be rendered in the integrated IntelliJ test 
 To enable the integrated runner, add the following to your SBT file, then re-import it in IntelliJ:
 
 ```
-"dev.zio" %%% "zio-test-intellij" % zioVersion % "test"
+"dev.zio" %% "zio-test-intellij" % zioVersion % "test"
 ```
 
 The next time you run your tests from IntelliJ, the results will be rendered in the integrated test runner.
