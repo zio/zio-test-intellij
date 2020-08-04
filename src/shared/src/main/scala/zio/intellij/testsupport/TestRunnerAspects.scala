@@ -1,7 +1,7 @@
 package zio.intellij.testsupport
 
 import zio.ZIO
-import zio.duration.Duration
+import zio.duration._
 import zio.test.TestAnnotationRenderer.LeafRenderer
 import zio.test._
 import zio.test.environment.Live
