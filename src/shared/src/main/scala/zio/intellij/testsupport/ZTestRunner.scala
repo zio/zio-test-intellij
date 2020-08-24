@@ -1,9 +1,10 @@
 package zio.intellij.testsupport
 
+import java.util.concurrent.atomic.AtomicReference
+
 import zio.duration.Duration
 import zio.test._
 import zio.test.environment.TestEnvironment
-import zio.{ Ref, UIO }
 
 object ZTestRunner {
 
@@ -90,45 +91,36 @@ object ZTestRunner {
 
 object TestRunnerReporter {
   def apply[E](): TestReporter[E] =
-    (_: Duration, executedSpec: ExecutedSpec[E]) =>
-      for {
-        rendered <- render(executedSpec)
-        _        <- TestLogger.logLine(rendered.mkString("\n"))
-      } yield ()
+    (_: Duration, executedSpec: ExecutedSpec[E]) => TestLogger.logLine(render(executedSpec).mkString("\n"))
 
-  def render[E](executedSpec: ExecutedSpec[E]): UIO[Seq[String]] =
-    Ref.make(0).flatMap { idCounter =>
-      def newId: UIO[Int] =
-        idCounter.updateAndGet(_ + 1)
+  def render[E](executedSpec: ExecutedSpec[E]): Seq[String] = {
+    val idCounter = new AtomicReference(0)
 
-      def loop(executedSpec: ExecutedSpec[E], pid: Int): UIO[Seq[String]] =
-        executedSpec.caseValue match {
-          case Spec.SuiteCase(label, executedSpecs, _) =>
-            for {
-              id       <- newId
-              specs    <- executedSpecs.useNow
-              started  = suiteStarted(label, id, pid)
-              finished = suiteFinished(label, id)
-              rest     <- UIO.foreach(specs)(loop(_, id)).map(_.flatten)
-            } yield started +: rest :+ finished
-          case Spec.TestCase(label, result, annotations) =>
-            for {
-              id      <- newId
-              results <- DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
-              started = testStarted(label, id, pid)
-              finished <- result.map {
-                           case Right(TestSuccess.Succeeded(_)) =>
-                             val timing = TestRunnerAspects.renderTiming.run(Nil, annotations)
-                             Seq(testFinished(label, id, timing.headOption))
-                           case Right(TestSuccess.Ignored) =>
-                             Seq(testIgnored(label, id))
-                           case Left(_) =>
-                             Seq(testFailed(label, id, results.toList))
-                         }
-            } yield started +: finished
-        }
-      loop(executedSpec, 0)
-    }
+    def loop(executedSpec: ExecutedSpec[E], pid: Int): Seq[String] =
+      executedSpec.caseValue match {
+        case ExecutedSpec.SuiteCase(label, specs) =>
+          val id       = idCounter.updateAndGet(_ + 1)
+          val started  = suiteStarted(label, id, pid)
+          val finished = suiteFinished(label, id)
+          val rest     = specs.flatMap(loop(_, id))
+          started +: rest :+ finished
+        case ExecutedSpec.TestCase(label, result, annotations) =>
+          val id      = idCounter.updateAndGet(_ + 1)
+          val results = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
+          val started = testStarted(label, id, pid)
+          val finished = result match {
+            case Right(TestSuccess.Succeeded(_)) =>
+              val timing = TestRunnerAspects.renderTiming.run(Nil, annotations)
+              Seq(testFinished(label, id, timing.headOption))
+            case Right(TestSuccess.Ignored) =>
+              Seq(testIgnored(label, id))
+            case Left(_) =>
+              Seq(testFailed(label, id, results.toList))
+          }
+          started +: finished
+      }
+    loop(executedSpec, 0)
+  }
 
   private def suiteStarted(label: String, id: Int, parentId: Int) =
     tc(
