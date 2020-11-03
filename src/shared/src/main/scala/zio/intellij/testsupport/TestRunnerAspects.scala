@@ -16,13 +16,12 @@ private[testsupport] object TestRunnerAspects {
       def perTest[R <: Live with Annotations, E](
         test: ZIO[R, TestFailure[E], TestSuccess]
       ): ZIO[R, TestFailure[E], TestSuccess] =
-        Live.withLive(test)(_.either.timed).flatMap {
-          case (duration, result) =>
-            ZIO.fromEither(result) <*
-              Annotations.get(TestAnnotation.timing).flatMap { current =>
-                val actualDuration = if (current.isZero) duration else current
-                Annotations.annotate(timingTestReport, actualDuration)
-              }
+        Live.withLive(test)(_.either.timed).flatMap { case (duration, result) =>
+          ZIO.fromEither(result) <*
+            Annotations.get(TestAnnotation.timing).flatMap { current =>
+              val actualDuration = if (current.isZero) duration else current
+              Annotations.annotate(timingTestReport, actualDuration)
+            }
         }
     }
 
@@ -39,10 +38,9 @@ private[testsupport] object TestRunnerAspects {
    * execution time.
    */
   val renderTiming: TestAnnotationRenderer =
-    LeafRenderer(timingTestReport) {
-      case child :: _ =>
-        if (child.isZero) None
-        else Some(s"${child.toMillis}")
+    LeafRenderer(timingTestReport) { case child :: _ =>
+      if (child.isZero) None
+      else Some(s"${child.toMillis}")
     }
 
 }

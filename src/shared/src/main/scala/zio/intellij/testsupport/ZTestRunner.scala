@@ -42,12 +42,11 @@ object ZTestRunner {
         }
         .toList
         .groupBy(_._1)
-        .map {
-          case (k, v) =>
-            (k, v.map(_._2))
+        .map { case (k, v) =>
+          (k, v.map(_._2))
         }
 
-      val testClass = parsedArgs
+      val testClass   = parsedArgs
         .getOrElse("testClassTerm", Nil)
         .headOption
         .getOrElse {
@@ -98,23 +97,23 @@ object TestRunnerReporter {
 
     def loop(executedSpec: ExecutedSpec[E], pid: Int): Seq[String] =
       executedSpec.caseValue match {
-        case ExecutedSpec.SuiteCase(label, specs) =>
+        case ExecutedSpec.SuiteCase(label, specs)              =>
           val id       = idCounter.updateAndGet(_ + 1)
           val started  = suiteStarted(label, id, pid)
           val finished = suiteFinished(label, id)
           val rest     = specs.flatMap(loop(_, id))
           started +: rest :+ finished
         case ExecutedSpec.TestCase(label, result, annotations) =>
-          val id      = idCounter.updateAndGet(_ + 1)
-          val results = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
-          val started = testStarted(label, id, pid)
+          val id       = idCounter.updateAndGet(_ + 1)
+          val results  = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
+          val started  = testStarted(label, id, pid)
           val finished = result match {
             case Right(TestSuccess.Succeeded(_)) =>
               val timing = TestRunnerAspects.renderTiming.run(Nil, annotations)
               Seq(testFinished(label, id, timing.headOption))
-            case Right(TestSuccess.Ignored) =>
+            case Right(TestSuccess.Ignored)      =>
               Seq(testIgnored(label, id))
-            case Left(_) =>
+            case Left(_)                         =>
               Seq(testFailed(label, id, results.toList))
           }
           started +: finished
@@ -151,7 +150,7 @@ object TestRunnerReporter {
         s"testFailed name='${escapeString(label)}' nodeId='$id' message='Assertion failed:' " +
           s"details='${escapeString(r.rendered.drop(1).mkString("\n"))}'"
       )
-    case _ => tc(s"testFailed name='${escapeString(label)}' message='Assertion failed' nodeId='$id'")
+    case _        => tc(s"testFailed name='${escapeString(label)}' message='Assertion failed' nodeId='$id'")
   }
 
   def tc(message: String): String =
