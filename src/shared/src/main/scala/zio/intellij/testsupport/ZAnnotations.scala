@@ -6,7 +6,7 @@ import zio.test.TestAnnotationRenderer.LeafRenderer
 import zio.test._
 import zio.test.environment.Live
 
-private[testsupport] object TestRunnerAspects {
+private[testsupport] object ZAnnotations {
 
   /**
    * Annotates tests with their execution times.
@@ -25,22 +25,18 @@ private[testsupport] object TestRunnerAspects {
         }
     }
 
-  /**
-   * An annotation for timing the test suite (note: this is different from the 'timing' annotation
-   * to prevent clashing)
-   */
   private val timingTestReport: TestAnnotation[Duration] =
     TestAnnotation("intellij-timing", Duration.Zero, _ + _)
 
-  /**
-   * A test annotation renderer that renders the time taken to execute each
-   * test or suite both in absolute duration and as a percentage of total
-   * execution time.
-   */
   val renderTiming: TestAnnotationRenderer =
     LeafRenderer(timingTestReport) { case child :: _ =>
       if (child.isZero) None
       else Some(s"${child.toMillis}")
     }
 
+  val location: TestAnnotationRenderer =
+    LeafRenderer(TestAnnotation.location) { case child :: _ =>
+      if (child.isEmpty) None
+      else child.headOption.map(s => s"file://${s.path}:${s.line}")
+    }
 }

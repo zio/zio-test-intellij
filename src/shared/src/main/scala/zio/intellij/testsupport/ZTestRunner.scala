@@ -1,10 +1,11 @@
 package zio.intellij.testsupport
 
-import java.util.concurrent.atomic.AtomicReference
-
 import zio.duration.Duration
+import zio.intellij.testsupport.ZAnnotations.location
 import zio.test._
 import zio.test.environment.TestEnvironment
+
+import java.util.concurrent.atomic.AtomicReference
 
 object ZTestRunner {
 
@@ -79,7 +80,7 @@ object ZTestRunner {
     val specInstance = createSpec(parsedArgs)
     val spec         = FilteredSpec(specInstance.spec, testArgs)
 
-    val withTiming = spec @@ TestRunnerAspects.timedReport
+    val withTiming = spec @@ ZAnnotations.timedReport
 
     val runner = specInstance.runner
       .withReporter(TestRunnerReporter[specInstance.Failure]())
@@ -99,56 +100,54 @@ object TestRunnerReporter {
       executedSpec.caseValue match {
         case ExecutedSpec.SuiteCase(label, specs)              =>
           val id       = idCounter.updateAndGet(_ + 1)
-          val started  = suiteStarted(label, id, pid)
-          val finished = suiteFinished(label, id)
+          val started  = onSuiteStarted(label, id, pid)
+          val finished = onSuiteFinished(label, id)
           val rest     = specs.flatMap(loop(_, id))
           started +: rest :+ finished
         case ExecutedSpec.TestCase(label, result, annotations) =>
           val id       = idCounter.updateAndGet(_ + 1)
-          val results  = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default)
-          val started  = testStarted(label, id, pid)
+          val results  = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default, includeCause = true)
+          val loc      = location.run(Nil, annotations).mkString
+          val started  = onTestStarted(label, id, loc, pid)
           val finished = result match {
             case Right(TestSuccess.Succeeded(_)) =>
-              val timing = TestRunnerAspects.renderTiming.run(Nil, annotations)
-              Seq(testFinished(label, id, timing.headOption))
+              val timing = ZAnnotations.renderTiming.run(Nil, annotations)
+              Seq(onTestFinished(label, id, timing.headOption))
             case Right(TestSuccess.Ignored)      =>
-              Seq(testIgnored(label, id))
+              Seq(onTestIgnored(label, id))
             case Left(_)                         =>
-              Seq(testFailed(label, id, results.toList))
+              Seq(onTestFailed(label, id, results.toList))
           }
           started +: finished
       }
     loop(executedSpec, 0)
   }
 
-  private def suiteStarted(label: String, id: Int, parentId: Int) =
-    tc(
-      s"testSuiteStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
-        s"captureStandardOutput='false'"
-    )
+  private def onSuiteStarted(label: String, id: Int, parentId: Int) =
+    tc(s"testSuiteStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId'")
 
-  private def suiteFinished(label: String, id: Int) =
+  private def onSuiteFinished(label: String, id: Int) =
     tc(s"testSuiteFinished name='${escapeString(label)}' nodeId='$id'")
 
-  private def testStarted(label: String, id: Int, parentId: Int) =
+  private def onTestStarted(label: String, id: Int, loc: String, parentId: Int) =
     tc(
       s"testStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
-        s"captureStandardOutput='false'"
+        s"captureStandardOutput='true' locationHint='${escapeString(loc)}'"
     )
 
-  private def testFinished(label: String, id: Int, timing: Option[String]) = {
-    val m = s"testFinished name='${escapeString(label)}' nodeId='$id'"
-    tc(timing.fold(m)(t => m + s" duration='$t'"))
-  }
+  private def onTestFinished(label: String, id: Int, timing: Option[String]) =
+    tc(
+      s"testFinished name='${escapeString(label)}' nodeId='$id' duration='${timing.getOrElse("")}'"
+    )
 
-  private def testIgnored(label: String, id: Int) =
+  private def onTestIgnored(label: String, id: Int) =
     tc(s"testIgnored name='${escapeString(label)}' nodeId='$id'")
 
-  private def testFailed(label: String, id: Int, res: List[RenderedResult[String]]) = res match {
+  private def onTestFailed(label: String, id: Int, res: List[RenderedResult[String]]) = res match {
     case r :: Nil =>
       tc(
-        s"testFailed name='${escapeString(label)}' nodeId='$id' message='Assertion failed:' " +
-          s"details='${escapeString(r.rendered.drop(1).mkString("\n"))}'"
+        s"testFailed name='${escapeString(label)}' nodeId='$id' " +
+          s"message='Assertion failed:' details='${escapeString(r.rendered.drop(1).mkString("\n"))}'"
       )
     case _        => tc(s"testFailed name='${escapeString(label)}' message='Assertion failed' nodeId='$id'")
   }
