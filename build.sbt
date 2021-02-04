@@ -23,7 +23,9 @@ inThisBuild(
         url("https://github.com/zio/zio-test-intellij/"),
         "scm:git:git@github.com:zio/zio-test-intellij.git"
       )
-    )
+    ),
+    sources in (Compile, doc) := Seq.empty,
+    publishArtifact in (Compile, packageDoc) := false
   )
 )
 
