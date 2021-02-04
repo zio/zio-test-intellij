@@ -29,10 +29,21 @@ inThisBuild(
   )
 )
 
+val zioVersion = "1.0.4-2"
+
+ThisBuild / publishTo := sonatypePublishToBundle.value
+
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+addCommandAlias(
+  "testJVM",
+  ";runnerJVM/test"
+)
 
-val zioVersion = "1.0.4-2"
+addCommandAlias(
+  "testJS",
+  ";runnerJS/test"
+)
 
 lazy val root = project
   .in(file("."))
