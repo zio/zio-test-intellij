@@ -23,14 +23,27 @@ inThisBuild(
         url("https://github.com/zio/zio-test-intellij/"),
         "scm:git:git@github.com:zio/zio-test-intellij.git"
       )
-    )
+    ),
+    sources in (Compile, doc) := Seq.empty,
+    publishArtifact in (Compile, packageDoc) := false
   )
 )
 
+val zioVersion = "1.0.4-2"
+
+ThisBuild / publishTo := sonatypePublishToBundle.value
+
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+addCommandAlias(
+  "testJVM",
+  ";runnerJVM/test"
+)
 
-val zioVersion = "1.0.4-2"
+addCommandAlias(
+  "testJS",
+  ";runnerJS/test"
+)
 
 lazy val root = project
   .in(file("."))

@@ -67,7 +67,7 @@ object ZTestRunner {
     import org.portablescala.reflect._
     val fqn = args.testClass.stripSuffix("$") + "$"
     Reflect
-      .lookupLoadableModuleClass(fqn)
+      .lookupLoadableModuleClass(fqn, this.getClass.getClassLoader)
       .getOrElse(throw new ClassNotFoundException("failed to load object: " + fqn))
       .loadModule()
       .asInstanceOf[RunnableSpec[TestEnvironment, Any]]
@@ -97,7 +97,7 @@ object TestRunnerReporter {
     val idCounter = new AtomicReference(0)
 
     def loop(executedSpec: ExecutedSpec[E], pid: Int): Seq[String] =
-      executedSpec.caseValue match {
+      (executedSpec.caseValue: @unchecked) match {
         case ExecutedSpec.SuiteCase(label, specs)              =>
           val id       = idCounter.updateAndGet(_ + 1)
           val started  = onSuiteStarted(label, id, pid)
