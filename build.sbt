@@ -58,8 +58,7 @@ lazy val root = project
 lazy val runner = crossProject(JSPlatform, JVMPlatform)
   .in(file("src"))
   .settings(stdSettings("zio-test-intellij"))
-  .settings(crossProjectSettings)
-  .settings(buildInfoSettings("zio-test-intellij"))
+  .settings(scala3Settings)
   .settings(
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio"      % zioVersion,
