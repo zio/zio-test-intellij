@@ -1,6 +1,5 @@
-import sbt._
 import sbt.Keys._
-import dotty.tools.sbtplugin.DottyPlugin.autoImport._
+import sbt._
 
 object BuildHelper {
 
@@ -8,20 +7,8 @@ object BuildHelper {
     Seq(
       name := s"$prjName",
       crossScalaVersions := Seq(Scala211, Scala212, Scala213),
-      scalaVersion in ThisBuild := Scala212,
+      ThisBuild / scalaVersion := Scala213,
       scalacOptions := CommonOpts ++ extraOptions(scalaVersion.value),
-      libraryDependencies ++= {
-        if (isDotty.value)
-          Seq(
-            ("com.github.ghik" % s"silencer-lib_$Scala213" % SilencerVersion % Provided)
-              .withDottyCompat(scalaVersion.value)
-          )
-        else
-          Seq(
-            "com.github.ghik" % "silencer-lib" % SilencerVersion % Provided cross CrossVersion.full,
-            compilerPlugin("com.github.ghik" % "silencer-plugin" % SilencerVersion cross CrossVersion.full)
-          )
-      },
       incOptions ~= (_.withLogRecompileOnMacro(false))
     )
 
@@ -33,8 +20,6 @@ object BuildHelper {
   final val scala3Settings = Seq(
     crossScalaVersions += Scala3
   )
-
-  final val SilencerVersion = "1.7.3"
 
   final private val CommonOpts =
     Seq(
@@ -67,8 +52,7 @@ object BuildHelper {
       "-Wunused:privates",
       "-Wunused:params",
       "-Wvalue-discard",
-      "-Wdead-code",
-      "-P:silencer:globalFilters=[import scala.collection.compat._]"
+      "-Wdead-code"
     )
 
   final private val OptsTo212 =

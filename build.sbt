@@ -47,7 +47,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "zio-test-intellij",
-    skip in publish := true,
+    publish / skip := true,
     unusedCompileDependenciesFilter -= moduleFilter("org.scala-js", "scalajs-library")
   )
   .aggregate(
