@@ -1,8 +1,8 @@
 # ZIO Test runner support for the ZIO IntelliJ plugin
 
-| CI | Release | Snapshot | Discord |
-| --- | --- | --- | --- |
-| ![CI](https://github.com/zio/zio-test-intellij/workflows/CI/badge.svg) | [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases] | [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots] | [![Badge-Discord]][Link-Discord] |
+| Project Stage | CI | Release | Snapshot | Discord |
+| --- | --- | --- | --- | --- |
+| [![Project stage][Stage]][Stage-Page] | ![CI](https://github.com/zio/zio-test-intellij/workflows/CI/badge.svg) | [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases] | [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots] | [![Badge-Discord]][Link-Discord] |
 
 # Summary
 This is an optional dependency module, providing enhanced test runner support in the [ZIO IntelliJ plugin](https://github.com/zio/zio-intellij).
@@ -61,4 +61,5 @@ Come chat with us on [![Badge-Discord]][Link-Discord].
 [Link-SonatypeReleases]: https://oss.sonatype.org/content/repositories/releases/dev/zio/zio-test-intellij_2.12/ "Sonatype Releases"
 [Link-SonatypeSnapshots]: https://oss.sonatype.org/content/repositories/snapshots/dev/zio/zio-test-intellij_2.12/ "Sonatype Snapshots"
 [Link-Discord]: https://discord.gg/8fYmfG "Discord"
-
+[Stage]: https://img.shields.io/badge/Project%20Stage-Production%20Ready-brightgreen.svg
+[Stage-Page]: https://github.com/zio/zio/wiki/Project-Stages
