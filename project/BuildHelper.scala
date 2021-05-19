@@ -14,7 +14,7 @@ object BuildHelper {
 
   final private val Scala211 = "2.11.12"
   final private val Scala212 = "2.12.13"
-  final private val Scala213 = "2.13.5"
+  final private val Scala213 = "2.13.6"
   final private val Scala3   = "3.0.0"
 
   final val scala3Settings = Seq(
