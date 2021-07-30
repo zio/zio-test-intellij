@@ -96,18 +96,22 @@ object TestRunnerReporter {
   def render[E](executedSpec: ExecutedSpec[E]): Seq[String] = {
     val idCounter = new AtomicReference(0)
 
-    def loop(executedSpec: ExecutedSpec[E], pid: Int): Seq[String] =
-      (executedSpec.caseValue: @unchecked) match {
-        case ExecutedSpec.SuiteCase(label, specs)              =>
+    def loop(executedSpec: ExecutedSpec[E], pid: Int, labels: List[String]): Seq[String] =
+      executedSpec.caseValue match {
+        case ExecutedSpec.LabeledCase(label, spec)      =>
+          loop(spec, pid, label :: labels)
+        case ExecutedSpec.MultipleCase(specs)           =>
           val id       = idCounter.updateAndGet(_ + 1)
+          val label    = labels.reverse.mkString(" - ")
           val started  = onSuiteStarted(label, id, pid)
           val finished = onSuiteFinished(label, id)
-          val rest     = specs.flatMap(loop(_, id))
+          val rest     = specs.flatMap(loop(_, id, List.empty))
           started +: rest :+ finished
-        case ExecutedSpec.TestCase(label, result, annotations) =>
+        case ExecutedSpec.TestCase(result, annotations) =>
           val id       = idCounter.updateAndGet(_ + 1)
           val results  = DefaultTestReporter.render(executedSpec, TestAnnotationRenderer.default, includeCause = true)
           val loc      = location.run(Nil, annotations).mkString
+          val label    = labels.reverse.mkString(" - ")
           val started  = onTestStarted(label, id, loc, pid)
           val finished = result match {
             case Right(TestSuccess.Succeeded(_)) =>
@@ -120,7 +124,7 @@ object TestRunnerReporter {
           }
           started +: finished
       }
-    loop(executedSpec, 0)
+    loop(executedSpec, 0, List.empty)
   }
 
   private def onSuiteStarted(label: String, id: Int, parentId: Int) =
