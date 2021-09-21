@@ -75,14 +75,15 @@ object ZTestRunner {
     val parsedArgs   = Args.parse(args)
     val testArgs     = parsedArgs.toTestArgs
     val specInstance = createSpec(parsedArgs)
-    val spec         = FilteredSpec(specInstance.spec, testArgs)
 
-    val withTiming = spec @@ ZAnnotations.timedReport
+    val spec = specInstance.aspects.foldLeft(FilteredSpec(specInstance.spec, testArgs))(_ @@ _) @@
+      TestAspect.fibers @@
+      ZAnnotations.timedReport
 
     val runner = specInstance.runner
       .withReporter(TestRunnerReporter[specInstance.Failure]())
 
-    val _ = runner.unsafeRunSync(withTiming)
+    val _ = runner.unsafeRunSync(spec)
   }
 }
 
