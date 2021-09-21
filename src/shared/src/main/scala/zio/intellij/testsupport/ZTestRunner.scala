@@ -15,11 +15,10 @@ object ZTestRunner {
 
   object Args {
 
-    /**
-     * Read args from file if the command line shortener (Java 9+) is enabled.
-     *
-     * https://blog.jetbrains.com/idea/2017/10/intellij-idea-2017-3-eap-configurable-command-line-shortener-and-more/
-     */
+    /** Read args from file if the command line shortener (Java 9+) is enabled.
+      *
+      * https://blog.jetbrains.com/idea/2017/10/intellij-idea-2017-3-eap-configurable-command-line-shortener-and-more/
+      */
     def readFromFile(args: Array[String]): Option[Array[String]] =
       if (args.length == 1 && args.head.startsWith("@")) {
         val f = scala.io.Source.fromFile(args.head.drop(1))
@@ -27,11 +26,9 @@ object ZTestRunner {
         finally f.close()
       } else None
 
-    /**
-     * Command line arguments from IntelliJ. Can be either regular-style args:
-     * [-s testClassName ...] [-t testMethodName ...]
-     * or new-style args file (passed via @filename).
-     */
+    /** Command line arguments from IntelliJ. Can be either regular-style args: [-s testClassName ...] [-t
+      * testMethodName ...] or new-style args file (passed via @filename).
+      */
     def parse(args: Array[String]): Args = {
       // TODO: Add a proper command-line parser
       val parsedArgs = readFromFile(args)

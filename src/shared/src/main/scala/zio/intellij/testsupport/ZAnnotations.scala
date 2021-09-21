@@ -8,9 +8,8 @@ import zio.test.environment.Live
 
 private[testsupport] object ZAnnotations {
 
-  /**
-   * Annotates tests with their execution times.
-   */
+  /** Annotates tests with their execution times.
+    */
   val timedReport: TestAspectAtLeastR[Live with Annotations] =
     new TestAspect.PerTest.AtLeastR[Live with Annotations] {
       def perTest[R <: Live with Annotations, E](

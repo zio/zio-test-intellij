@@ -4,10 +4,10 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 inThisBuild(
   List(
-    organization := "dev.zio",
-    homepage := Some(url("https://github.com/zio/zio-intellij")),
-    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    developers := List(
+    organization  := "dev.zio",
+    homepage      := Some(url("https://github.com/zio/zio-intellij")),
+    licenses      := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    developers    := List(
       Developer(
         "hmemcpy",
         "Igal Tabachnik",
@@ -18,7 +18,7 @@ inThisBuild(
     pgpPassphrase := sys.env.get("PGP_PASSWORD").map(_.toArray),
     pgpPublicRing := file("/tmp/public.asc"),
     pgpSecretRing := file("/tmp/secret.asc"),
-    scmInfo := Some(
+    scmInfo       := Some(
       ScmInfo(
         url("https://github.com/zio/zio-test-intellij/"),
         "scm:git:git@github.com:zio/zio-test-intellij.git"
@@ -46,7 +46,7 @@ addCommandAlias(
 lazy val root = project
   .in(file("."))
   .settings(
-    name := "zio-test-intellij",
+    name           := "zio-test-intellij",
     publish / skip := true,
     unusedCompileDependenciesFilter -= moduleFilter("org.scala-js", "scalajs-library")
   )
@@ -66,7 +66,7 @@ lazy val runner = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val forJS = runner.js
+lazy val forJS  = runner.js
   .settings(scalaJSUseMainModuleInitializer := true)
 
 lazy val forJVM = runner.jvm
