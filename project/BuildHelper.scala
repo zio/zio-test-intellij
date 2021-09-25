@@ -12,16 +12,16 @@ object BuildHelper {
       incOptions ~= (_.withLogRecompileOnMacro(false))
     )
 
-  final private val Scala211 = "2.11.12"
-  final private val Scala212 = "2.12.15"
-  final private val Scala213 = "2.13.6"
-  final private val Scala3   = "3.0.2"
+  final private val Scala211       = "2.11.12"
+  final private val Scala212       = "2.12.15"
+  final private val Scala213       = "2.13.6"
+  final private val Scala3         = "3.0.2"
 
-  final val scala3Settings = Seq(
+  final val scala3Settings                       = Seq(
     crossScalaVersions += Scala3
   )
 
-  final private val CommonOpts =
+  final private val CommonOpts                   =
     Seq(
       "-encoding",
       "UTF-8",
@@ -33,7 +33,7 @@ object BuildHelper {
       "-Xfatal-warnings"
     )
 
-  final private val CommonOpts2x =
+  final private val CommonOpts2x                 =
     Seq(
       "-explaintypes",
       "-Yrangepos",
@@ -44,7 +44,7 @@ object BuildHelper {
       "-Ywarn-value-discard"
     )
 
-  final private val Opts213 =
+  final private val Opts213                      =
     CommonOpts2x ++ Seq(
       "-Wunused:imports",
       "-Wvalue-discard",
@@ -55,7 +55,7 @@ object BuildHelper {
       "-Wdead-code"
     )
 
-  final private val OptsTo212 =
+  final private val OptsTo212                    =
     CommonOpts2x ++ Seq(
       "-Xfuture",
       "-Ypartial-unification",
@@ -67,7 +67,7 @@ object BuildHelper {
       "-Ywarn-unused-import"
     )
 
-  final private val OptsTo3 =
+  final private val OptsTo3                      =
     Seq(
       "-noindent"
     )

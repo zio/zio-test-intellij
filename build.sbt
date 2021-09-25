@@ -43,7 +43,7 @@ addCommandAlias(
   ";runnerJS/test"
 )
 
-lazy val root = project
+lazy val root   = project
   .in(file("."))
   .settings(
     name           := "zio-test-intellij",

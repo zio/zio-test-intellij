@@ -8,7 +8,7 @@ import zio.{ Has, UIO, ZIO, ZLayer, ZManaged }
 
 object ZTestRunnerSpec extends DefaultRunnableSpec {
 
-  private def tempArgFile: ZLayer[Any, Throwable, Has[File]] = ZManaged.makeEffect {
+  private def tempArgFile: ZLayer[Any, Throwable, Has[File]]          = ZManaged.makeEffect {
     val tmpFile = File.createTempFile("ZTestRunnerSpec-", ".tmp")
     val writer  = new java.io.PrintWriter(tmpFile)
     try writer.print(

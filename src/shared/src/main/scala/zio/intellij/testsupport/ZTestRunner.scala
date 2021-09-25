@@ -91,7 +91,7 @@ object TestRunnerReporter {
   def apply[E](): TestReporter[E] =
     (_: Duration, executedSpec: ExecutedSpec[E]) => TestLogger.logLine(render(executedSpec).mkString("\n"))
 
-  def render[E](executedSpec: ExecutedSpec[E]): Seq[String] = {
+  def render[E](executedSpec: ExecutedSpec[E]): Seq[String]                           = {
     val idCounter = new AtomicReference(0)
 
     def loop(executedSpec: ExecutedSpec[E], pid: Int, labels: List[String]): Seq[String] =
@@ -125,24 +125,24 @@ object TestRunnerReporter {
     loop(executedSpec, 0, List.empty)
   }
 
-  private def onSuiteStarted(label: String, id: Int, parentId: Int) =
+  private def onSuiteStarted(label: String, id: Int, parentId: Int)                   =
     tc(s"testSuiteStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId'")
 
-  private def onSuiteFinished(label: String, id: Int) =
+  private def onSuiteFinished(label: String, id: Int)                                 =
     tc(s"testSuiteFinished name='${escapeString(label)}' nodeId='$id'")
 
-  private def onTestStarted(label: String, id: Int, loc: String, parentId: Int) =
+  private def onTestStarted(label: String, id: Int, loc: String, parentId: Int)       =
     tc(
       s"testStarted name='${escapeString(label)}' nodeId='$id' parentNodeId='$parentId' " +
         s"captureStandardOutput='true' locationHint='${escapeString(loc)}'"
     )
 
-  private def onTestFinished(label: String, id: Int, timing: Option[String]) =
+  private def onTestFinished(label: String, id: Int, timing: Option[String])          =
     tc(
       s"testFinished name='${escapeString(label)}' nodeId='$id' duration='${timing.getOrElse("")}'"
     )
 
-  private def onTestIgnored(label: String, id: Int) =
+  private def onTestIgnored(label: String, id: Int)                                   =
     tc(s"testIgnored name='${escapeString(label)}' nodeId='$id'")
 
   private def onTestFailed(label: String, id: Int, res: List[RenderedResult[String]]) = res match {

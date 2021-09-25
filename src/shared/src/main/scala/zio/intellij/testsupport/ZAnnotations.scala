@@ -24,7 +24,7 @@ private[testsupport] object ZAnnotations {
         }
     }
 
-  private val timingTestReport: TestAnnotation[Duration] =
+  private val timingTestReport: TestAnnotation[Duration]     =
     TestAnnotation("intellij-timing", Duration.Zero, _ + _)
 
   val renderTiming: TestAnnotationRenderer =
