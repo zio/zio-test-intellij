@@ -66,7 +66,7 @@ lazy val runner = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val forJS  = runner.js
+lazy val forJS = runner.js
   .settings(scalaJSUseMainModuleInitializer := true)
 
 lazy val forJVM = runner.jvm
