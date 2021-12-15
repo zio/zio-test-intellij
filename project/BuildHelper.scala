@@ -14,8 +14,8 @@ object BuildHelper {
 
   final private val Scala211 = "2.11.12"
   final private val Scala212 = "2.12.15"
-  final private val Scala213 = "2.13.6"
-  final private val Scala3   = "3.0.2"
+  final private val Scala213 = "2.13.7"
+  final private val Scala3   = "3.1.0"
 
   final val scala3Settings = Seq(
     crossScalaVersions += Scala3
@@ -85,7 +85,7 @@ object BuildHelper {
           "-opt:l:inline",
           "-opt-inline-from:<source>"
         ) ++ OptsTo212
-      case Some((3, 0))  =>
+      case Some((3, _))  =>
         OptsTo3
       case _             =>
         Seq("-Xexperimental") ++ OptsTo212

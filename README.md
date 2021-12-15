@@ -5,7 +5,7 @@
 | [![Project stage][Stage]][Stage-Page] | ![CI](https://github.com/zio/zio-test-intellij/workflows/CI/badge.svg) | [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases] | [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots] | [![Badge-Discord]][Link-Discord] |
 
 # Summary
-This is an optional dependency module, providing enhanced test runner support in the [ZIO IntelliJ plugin](https://github.com/zio/zio-intellij).
+This is an optional dependency module, providing enhanced test runner support in the [ZIO IntelliJ plugin](https://github.com/zio/zio-intellij) for ZIO 1.x.
 
 <img src="https://user-images.githubusercontent.com/601206/74926840-37f77c80-53df-11ea-9991-ebd4b870d857.png" width="600" />
 

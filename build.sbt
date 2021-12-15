@@ -27,7 +27,7 @@ inThisBuild(
   )
 )
 
-val zioVersion = "1.0.12"
+val zioVersion = "1.0.13"
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
 
@@ -66,7 +66,7 @@ lazy val runner = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val forJS  = runner.js
+lazy val forJS = runner.js
   .settings(scalaJSUseMainModuleInitializer := true)
 
 lazy val forJVM = runner.jvm
