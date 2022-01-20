@@ -11,13 +11,14 @@ object ZTestRunnerSpec extends DefaultRunnableSpec {
   private def tempArgFile: ZLayer[Any, Throwable, Has[File]] = ZManaged.makeEffect {
     val tmpFile = File.createTempFile("ZTestRunnerSpec-", ".tmp")
     val writer  = new java.io.PrintWriter(tmpFile)
-    try writer.print(
-      s"""-testClassTerm
-         |class
-         |-testMethodTerm
-         |method
-         |""".stripMargin
-    )
+    try
+      writer.print(
+        s"""-testClassTerm
+           |class
+           |-testMethodTerm
+           |method
+           |""".stripMargin
+      )
     finally writer.close()
     tmpFile
   }(tmpFile => tmpFile.delete()).toLayer
