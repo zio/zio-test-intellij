@@ -27,7 +27,7 @@ inThisBuild(
   )
 )
 
-val zioVersion = "1.0.17"
+val zioVersion = "1.0.18"
 
 ThisBuild / publishTo := sonatypePublishToBundle.value
 
